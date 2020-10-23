@@ -7,16 +7,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $postName = $_POST['username'];
 $postPassword = $_POST['password'];
 
-echo "The username submitted is: " . $postName . "<br>";
-echo "The password submitted is: " . $postPassword . "<br>";
-
 // hash the password and assign to variable "$HashedPassword"
 $HashedPassword=password_hash($postPassword, PASSWORD_DEFAULT);
-echo "The HASHED password is: " . $HashedPassword . "<br>";
 
 // "MD5" password and assign to variable "$md5Password"
 $md5Password=md5($postPassword);
-echo "The MD5 password is: " . $md5Password . "<br><br>";
 
 } else{
     echo "only post requests are allowed";
