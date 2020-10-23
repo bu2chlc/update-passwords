@@ -13,10 +13,6 @@ $HashedPassword=password_hash($postPassword, PASSWORD_DEFAULT);
 // "MD5" password and assign to variable "$md5Password"
 $md5Password=md5($postPassword);
 
-} else{
-    echo "only post requests are allowed";
-}
-
 // set up database connection
 $servername = "localhost";
 $username = "root";
@@ -30,37 +26,7 @@ try {
   echo "Connection failed: " . $e->getMessage();
 }
 
-// check to see if user exists
-$stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
-$stmt->execute([$postName]);
-$user = $stmt->fetch();
-
-// check for plain text password
-if ($user && ($postPassword === $user['password']))
-{
-    echo "valid, plaintext" . "<br>";
-    // now update the database with hashed password
-    updatePassword($HashedPassword, $user['id']);
-} else{
-    // now check if the password is in MD5 format
-    if ($user && ($md5Password == $user['password']))
-    {
-        echo "valid, MD5" . "<br>";
-     // now update the database with hashed password
-     updatePassword($HashedPassword, $user['id']);
-    } else {
-        // finally, check if password is hashed
-        if ($user && password_verify($postPassword, $user['password']))
-        {
-            echo "valid, hashed" . "<br>";
-        } else {
-            echo "invalid password";
-        }
-    }
-}
-
-
-
+// define the function to update passwords in the DB
 function updatePassword($newPassword, $userId){
     global $conn;
     $sql = "UPDATE users SET password=? WHERE id=?";
@@ -69,4 +35,40 @@ function updatePassword($newPassword, $userId){
     echo "password has been updated";
 }
 
+// check to see if user exists
+$stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
+$stmt->execute([$postName]);
+$user = $stmt->fetch();
+
+// check for plain text password
+
+if ($user){
+
+    switch ($user['password']) {
+    
+        case password_verify($postPassword, $user['password']):
+            echo "valid, hashed" . "<br>";
+        break;
+        
+        case $postPassword:
+            echo "valid, plaintext" . "<br>";
+            // now update the database with hashed password
+            updatePassword($HashedPassword, $user['id']);
+        break;
+        
+        case $md5Password:
+            echo "valid, MD5" . "<br>";
+            // now update the database with hashed password
+            updatePassword($HashedPassword, $user['id']);
+        break;
+
+        default:
+            echo "invalid password";
+    }
+}  else {
+    echo "user not found";
+}
+} else{
+    echo "only post requests are allowed";
+}
 
